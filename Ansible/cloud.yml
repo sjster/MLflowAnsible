@@ -1,0 +1,106 @@
+- hosts: all
+  tasks:
+  - name: ping all hosts
+    ping:
+
+  - name: Update and upgrade apt packages
+    become: true
+    apt:
+      upgrade: yes
+      update_cache: yes
+  
+  - name: Install java 
+    become: true
+    apt:
+      name: default-jre
+  
+  - name: Download Anaconda python3
+    get_url:
+      url: https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh
+      dest: ~/anaconda_installer.sh
+
+  - name: Chmod anaconda
+    command: chmod +x ~/anaconda_installer.sh
+
+  - name: Supervisor install
+    become: yes
+    apt:
+      name: supervisor
+      state: latest
+    tags:
+      - supervisor_install  
+
+  - name: copy_supervisor_conf
+    become: yes
+    copy:
+      src: app.conf 
+      dest: /etc/supervisor/conf.d/app.conf
+    tags:
+        - conf_filecopy
+
+  - name: start supervisor service
+    become: yes
+    service:
+      name: supervisor
+      state: started
+
+  - stat:
+      path: ~/Anaconda
+    register: result
+
+  - name: Install anaconda
+    command: bash ~/anaconda_installer.sh -b -p ~/Anaconda
+    when: result.stat.exists == false
+
+  - name: anaconda_path
+    lineinfile:
+      path: ~/.bashrc
+      regexp: '^export PATH='
+      line: export PATH=~/Anaconda/bin:$PATH
+
+  - stat:
+      path: ~/Anaconda/envs/keras_env
+    register: env_result
+
+  - name: create_env
+    command: conda create -c conda-forge -y -n keras_env  pandas gunicorn jupyter s3fs boto3 numpy scipy python-crontab mlflow[extras]==1.21.0
+    environment:
+      PATH: '{{ ansible_env.HOME }}/Anaconda/bin:{{ ansible_env.PATH }}'
+    when: env_result.stat.exists == false
+
+  - name: Create a directory if it does not exist
+    file:
+      path: ~/keras
+      state: directory
+      mode: '0755'
+
+  - name: restart supervisor
+    become: yes
+    service:
+       name: supervisor
+       state: reloaded
+    tags:
+        - supervisor_reload
+
+  - name: start app 
+    become: yes
+    supervisorctl:
+      name: app:app-0
+      state: started
+    tags:
+        - app_start
+
+  - name: copy_python_code
+    copy:
+      src: ../MLProject_folder
+      dest: ~/keras/
+    tags:
+        - filecopy
+ 
+  - name: copy_python_data
+    copy:
+      src: ../data
+      dest: ~/keras/
+    tags:
+        - datacopy
+  
