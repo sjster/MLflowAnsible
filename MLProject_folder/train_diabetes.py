@@ -56,7 +56,6 @@ def eval_metrics(actual, pred):
 
 
 mlflow.set_tracking_uri("http://localhost:5001")
-    #mlflow.set_tracking_uri("sqlite:///myflow.db")
     # Create a new experiment if the experiment does not exist. If it does, make it the current experiment
 try:
         mlflow.create_experiment('Diabetes_experiment')
@@ -68,6 +67,7 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
     np.random.seed(40)
 
+    mlflow.start_run()
     # Split the data into training and test sets. (0.75, 0.25) split.
     train, test = train_test_split(data)
 
@@ -99,6 +99,7 @@ if __name__ == "__main__":
     mlflow.log_metric("r2", r2)
     mlflow.log_metric("mae", mae)
     mlflow.sklearn.log_model(lr, "model")
+    mlflow.sklearn.save_model(lr, "my_model_diabetes")
 
     # Compute paths
     eps = 5e-3  # the smaller it is the longer is the path
@@ -129,3 +130,4 @@ if __name__ == "__main__":
 
     # Log artifacts (output files)
     mlflow.log_artifact("ElasticNet-paths.png")
+    mlflow.end_run()

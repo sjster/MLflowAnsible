@@ -9,7 +9,7 @@ home_folder = "/home/ubuntu/keras/"
 
 if __name__ == "__main__":
 
-    mlflow.set_tracking_uri("http://localhost:5000")
+    mlflow.set_tracking_uri("http://localhost:5001")
     #mlflow.set_tracking_uri("sqlite:///myflow.db")
     # Create a new experiment if the experiment does not exist. If it does, make it the current experiment
     try:
