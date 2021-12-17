@@ -1,0 +1,20 @@
+curl http://127.0.0.1:5002/invocations -H 'Content-Type: application/json; format=pandas-records' -d '[
+    {"customerID": "8232-CTLKO", "gender": "Female", "SeniorCitizen": 0,
+ "Partner": "Yes",
+ "Dependents": "Yes",
+ "tenure": 66,
+ "PhoneService": "Yes",
+ "MultipleLines": "No",
+ "InternetService": "DSL",
+ "OnlineSecurity": "Yes",
+ "OnlineBackup": "No",
+ "DeviceProtection": "No",
+ "TechSupport": "No",
+ "StreamingTV": "Yes",
+ "StreamingMovies": "No",
+ "Contract": "Two year",
+ "PaperlessBilling": "Yes",
+ "PaymentMethod": "Electronic check",
+ "MonthlyCharges": 59.75,
+ "TotalCharges": 3996.8}
+]'
