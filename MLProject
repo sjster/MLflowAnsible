@@ -15,6 +15,12 @@ entry_points:
       X_val: ../data/X_val.csv
       y_val: ../data/y_val.csv
     command: "python MLflow_validate.py {X_val} {y_val}"
+  inference:
+    parameters:
+      X_val: ../data/X_val.csv
+      y_val: ../data/y_val.csv
+    command: "python MLflow_inference.py {X_val} {y_val}"
+  diabetes:
   diabetes:
     parameters:
       alpha: {type: float, default: 0.01}

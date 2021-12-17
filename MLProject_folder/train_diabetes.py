@@ -98,7 +98,8 @@ if __name__ == "__main__":
     mlflow.log_metric("rmse", rmse)
     mlflow.log_metric("r2", r2)
     mlflow.log_metric("mae", mae)
-    mlflow.sklearn.log_model(lr, "model")
+    os.system("rm -rf my_model_diabetes")
+    mlflow.sklearn.log_model(lr, artifact_path="artifacts", registered_model_name="lr")
     mlflow.sklearn.save_model(lr, "my_model_diabetes")
 
     # Compute paths
