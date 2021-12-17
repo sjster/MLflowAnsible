@@ -15,7 +15,8 @@ if __name__ == "__main__":
 
     X_val = pd.read_csv("../data/X_val.csv")
     y_val = pd.read_csv("../data/y_val.csv")
-
+ 
+    print("Printing data columns and number of columns")
     print(X_val.columns)
     print(len(X_val.columns))
     print(len(y_val.columns))
@@ -26,6 +27,11 @@ if __name__ == "__main__":
     
         # Load model as a PyFuncModel.
         loaded_model = mlflow.sklearn.load_model(logged_model)
-        xgbc_val_metrics = mlflow.sklearn.eval_and_log_metrics(loaded_model, X_val, y_val,
-                                                                    prefix="val_")
+        registered_model = mlflow.sklearn.load_model(model_uri=f"models:/xgboost_model/1")
+        xgbc_val_metrics = mlflow.sklearn.eval_and_log_metrics(loaded_model, X_val, y_val, prefix="val_")
+        print("Using the logged model")
         print(pd.DataFrame(xgbc_val_metrics, index=[0]))
+        xgbc_registered_val_metrics = mlflow.sklearn.eval_and_log_metrics(registered_model, X_val, y_val, prefix="val_")
+        print("Using the registered model")
+        print(pd.DataFrame(xgbc_registered_val_metrics, index=[0]))
+        
