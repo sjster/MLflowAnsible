@@ -1,11 +1,26 @@
 import pyspark
+from pyspark.sql.functions import when, col
 from pyspark.sql import *
 import mlflow
 import pandas as pd
+import sklearn
+import sklearn.metrics
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import FunctionTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.feature_extraction import FeatureHasher
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from xgboost import XGBClassifier
+from sklearn import set_config
+import numpy as np
 import sys
 import os
 
-home_folder = "/home/ubuntu/keras/" 
+home_folder = "/home/ubuntu/keras/"
 
 if __name__ == "__main__":
 
@@ -26,8 +41,6 @@ if __name__ == "__main__":
     mlflow.autolog(log_input_examples=True, log_models=True, exclusive=False)
     print("Arguments received", str(sys.argv[1]))
     data_file = str(sys.argv[1]) if len(sys.argv) > 1 else home_folder + "data/WA_Fn-UseC_-Telco-Customer-Churn.csv"
-
-
     input_df = spark.read.format("csv").option('header', "true").load(data_file)
     train_df, test_df = input_df.randomSplit([0.90, 0.1], seed=42)
     #use later for additional inference testing
@@ -36,14 +49,11 @@ if __name__ == "__main__":
 
     # COMMAND ----------
 
-    from pyspark.sql.functions import when, col
     test_df = test_df.withColumn("churn", when(test_df.Churn == 'Yes' ,1).otherwise(0))
     train_df = train_df.withColumn("churn", when(train_df.Churn == 'Yes' ,1).otherwise(0))
 
     # COMMAND ----------
 
-    import sklearn.metrics
-    import numpy as np
     test_pdf = test_df.toPandas()
     y_test = test_pdf["churn"]
     X_test = test_pdf.drop("churn", axis=1)
@@ -51,10 +61,6 @@ if __name__ == "__main__":
     y_test.to_csv(home_folder + "data/y_val.csv", index=False)
 
     # COMMAND ----------
-
-    from sklearn.impute import SimpleImputer
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import FunctionTransformer
 
     transformers = []
     numerical_pipeline = Pipeline(steps=[
@@ -66,10 +72,6 @@ if __name__ == "__main__":
 
     # COMMAND ----------
 
-    from sklearn.impute import SimpleImputer
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import OneHotEncoder
-
     one_hot_pipeline = Pipeline(steps=[
         ("imputer", SimpleImputer(missing_values=None, strategy="constant", fill_value="")),
         ("onehot", OneHotEncoder(handle_unknown="ignore"))
@@ -79,10 +81,6 @@ if __name__ == "__main__":
 
     # COMMAND ----------
 
-    from sklearn.feature_extraction import FeatureHasher
-    from sklearn.impute import SimpleImputer
-    from sklearn.pipeline import Pipeline
-
     for feature in ["customerID"]:
         hash_transformer = Pipeline(steps=[
             ("imputer", SimpleImputer(missing_values=None, strategy="constant", fill_value="")),
@@ -91,19 +89,13 @@ if __name__ == "__main__":
 
     # COMMAND ----------
 
-    from sklearn.compose import ColumnTransformer
-
     preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_threshold=0)
 
     # COMMAND ----------
 
-    from sklearn.preprocessing import StandardScaler
-
     standardizer = StandardScaler()
 
     # COMMAND ----------
-
-    from sklearn.model_selection import train_test_split
 
     df_loaded = train_df.toPandas()
     target_col = "churn"
@@ -113,12 +105,6 @@ if __name__ == "__main__":
     X_train, X_val, y_train, y_val = train_test_split(split_X, split_y, random_state=398741429, stratify=split_y)
 
     # COMMAND ----------
-
-    import mlflow
-    import sklearn
-    from xgboost import XGBClassifier
-    from sklearn import set_config
-    from sklearn.pipeline import Pipeline
 
     set_config(display="diagram")
 
@@ -135,7 +121,6 @@ if __name__ == "__main__":
         ("standardizer", standardizer),
         ("classifier", xgbc_classifier),
     ])
-
 
     # COMMAND ----------
 
