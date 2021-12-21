@@ -39,6 +39,9 @@ if __name__ == "__main__":
             .getOrCreate())
 
     mlflow.autolog(log_input_examples=True, log_models=True, exclusive=False)
+
+    # ---- Prepare data in Spark -----
+
     print("Arguments received", str(sys.argv[1]))
     data_file = str(sys.argv[1]) if len(sys.argv) > 1 else home_folder + "data/WA_Fn-UseC_-Telco-Customer-Churn.csv"
     input_df = spark.read.format("csv").option('header', "true").load(data_file)
@@ -47,20 +50,15 @@ if __name__ == "__main__":
     new_df = test_df
     print(train_df)
 
-    # COMMAND ----------
-
     test_df = test_df.withColumn("churn", when(test_df.Churn == 'Yes' ,1).otherwise(0))
     train_df = train_df.withColumn("churn", when(train_df.Churn == 'Yes' ,1).otherwise(0))
-
-    # COMMAND ----------
-
     test_pdf = test_df.toPandas()
     y_test = test_pdf["churn"]
     X_test = test_pdf.drop("churn", axis=1)
     X_test.to_csv(home_folder + "data/X_val.csv", index=False)
     y_test.to_csv(home_folder + "data/y_val.csv", index=False)
 
-    # COMMAND ----------
+    # ----- Setup the pipeline ------
 
     transformers = []
     numerical_pipeline = Pipeline(steps=[
@@ -70,8 +68,6 @@ if __name__ == "__main__":
 
     transformers.append(("numerical", numerical_pipeline, ["MonthlyCharges", "TotalCharges"]))
 
-    # COMMAND ----------
-
     one_hot_pipeline = Pipeline(steps=[
         ("imputer", SimpleImputer(missing_values=None, strategy="constant", fill_value="")),
         ("onehot", OneHotEncoder(handle_unknown="ignore"))
@@ -79,23 +75,17 @@ if __name__ == "__main__":
 
     transformers.append(("onehot", one_hot_pipeline, ["Contract", "Dependents", "DeviceProtection", "InternetService", "MultipleLines", "OnlineBackup", "OnlineSecurity", "PaperlessBilling", "Partner", "PaymentMethod", "PhoneService", "SeniorCitizen", "StreamingMovies", "StreamingTV", "TechSupport", "gender", "tenure"]))
 
-    # COMMAND ----------
-
     for feature in ["customerID"]:
         hash_transformer = Pipeline(steps=[
             ("imputer", SimpleImputer(missing_values=None, strategy="constant", fill_value="")),
             (f"{feature}_hasher", FeatureHasher(n_features=1024, input_type="string"))])
         transformers.append((f"{feature}_hasher", hash_transformer, [feature]))
 
-    # COMMAND ----------
-
     preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_threshold=0)
-
-    # COMMAND ----------
 
     standardizer = StandardScaler()
 
-    # COMMAND ----------
+    # ------ Convert data to pandas format for training ----------
 
     df_loaded = train_df.toPandas()
     target_col = "churn"
@@ -104,9 +94,9 @@ if __name__ == "__main__":
 
     X_train, X_val, y_train, y_val = train_test_split(split_X, split_y, random_state=398741429, stratify=split_y)
 
-    # COMMAND ----------
-
     set_config(display="diagram")
+
+    # ------ Setup the XGBoost classifier -------
 
     xgbc_classifier = XGBClassifier(
       learning_rate=0.05064395325585373,
@@ -122,7 +112,7 @@ if __name__ == "__main__":
         ("classifier", xgbc_classifier),
     ])
 
-    # COMMAND ----------
+    # ---- Train the mode  -----
 
     with mlflow.start_run(run_name="xgboost") as mlflow_run:
         model.fit(X_train, y_train)
