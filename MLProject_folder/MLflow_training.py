@@ -112,7 +112,7 @@ if __name__ == "__main__":
         ("classifier", xgbc_classifier),
     ])
 
-    # ---- Train the mode  -----
+    # ---- Train the model  -----
 
     with mlflow.start_run(run_name="xgboost") as mlflow_run:
         model.fit(X_train, y_train)
