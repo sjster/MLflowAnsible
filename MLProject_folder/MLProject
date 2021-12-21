@@ -8,10 +8,21 @@ conda_env: conda.yaml
 entry_points:
   main:
     parameters:
-      data_file: ../data/WA_Fn-UseC_-Telco-Customer-Churn.csv 
+      data_file: { type: string, default: "../data/WA_Fn-UseC_-Telco-Customer-Churn.csv" } 
     command: "python MLflow_training.py {data_file}"
   validate:
     parameters:
       X_val: ../data/X_val.csv
       y_val: ../data/y_val.csv
     command: "python MLflow_validate.py {X_val} {y_val}"
+  inference:
+    parameters:
+      X_val: ../data/X_val.csv
+      y_val: ../data/y_val.csv
+    command: "python MLflow_inference.py {X_val} {y_val}"
+  diabetes:
+  diabetes:
+    parameters:
+      alpha: {type: float, default: 0.01}
+      l1_ratio: {type: float, default: 0.1}
+    command: "python train_diabetes.py {alpha} {l1_ratio}"
