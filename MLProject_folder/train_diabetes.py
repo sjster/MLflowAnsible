@@ -19,7 +19,6 @@
 import os
 import warnings
 import sys
-
 import pandas as pd
 import numpy as np
 from itertools import cycle
@@ -29,6 +28,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import ElasticNet
 from sklearn.linear_model import lasso_path, enet_path
 from sklearn import datasets
+import mlflow
+import mlflow.sklearn
 
 # Load Diabetes datasets
 diabetes = datasets.load_diabetes()
@@ -40,12 +41,6 @@ Y = np.array([y]).transpose()
 d = np.concatenate((X, Y), axis=1)
 cols = diabetes.feature_names + ["progression"]
 data = pd.DataFrame(d, columns=cols)
-
-
-# Import mlflow
-import mlflow
-import mlflow.sklearn
-
 
 # Evaluate metrics
 def eval_metrics(actual, pred):
