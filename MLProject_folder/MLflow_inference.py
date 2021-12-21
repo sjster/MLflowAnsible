@@ -25,12 +25,16 @@ if __name__ == "__main__":
 
     with mlflow.start_run(run_name="xgboost_inference") as mlflow_run:
     
-        # Load model as a PyFuncModel.
+        # Load logged model as a sklearn model from run uri
         loaded_model = mlflow.sklearn.load_model(logged_model)
+
+        # Load registerd model as a sklearn model 
         registered_model = mlflow.sklearn.load_model(model_uri=f"models:/xgboost_model/1")
+
         xgbc_val_metrics = mlflow.sklearn.eval_and_log_metrics(loaded_model, X_val, y_val, prefix="val_")
         print("Using the logged model")
         print(pd.DataFrame(xgbc_val_metrics, index=[0]))
+
         xgbc_registered_val_metrics = mlflow.sklearn.eval_and_log_metrics(registered_model, X_val, y_val, prefix="val_")
         print("Using the registered model")
         print(pd.DataFrame(xgbc_registered_val_metrics, index=[0]))
